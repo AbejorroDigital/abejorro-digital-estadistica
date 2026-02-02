@@ -59,7 +59,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelected }) => {
             <p className="pl-1">o arrastrar y soltar</p>
           </div>
           <p className="text-xs text-slate-500">
-            XLSX, XLS, ODS, o CSV hasta 10MB
+            XLSX, XLS, ODS, o CSV. (Soporta archivos grandes, recomendado &lt; 50MB)
           </p>
         </div>
       </div>
