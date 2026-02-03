@@ -1,24 +1,49 @@
 import React, { useRef, useState } from 'react';
 import { Upload, FileSpreadsheet, Activity } from 'lucide-react';
 
+/**
+ * Propiedades para el componente UploadZone.
+ * @interface UploadZoneProps
+ * @property {(file: File) => void} onFileSelected - Callback que se ejecuta cuando el usuario selecciona o suelta un archivo válido.
+ */
 interface UploadZoneProps {
   onFileSelected: (file: File) => void;
 }
 
+/**
+ * Componente de Zona de Carga.
+ * Proporciona una interfaz visual para que el usuario suba archivos mediante clic o arrastrar y soltar (Drag and Drop).
+ * * @description Soporta múltiples formatos de hojas de cálculo y utiliza una entrada de archivo oculta 
+ * activada mediante una referencia (`useRef`) para mantener una estética limpia.
+ * * @component
+ */
 export const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelected }) => {
+  // Referencia al input de tipo file oculto
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estado para gestionar el estilo visual cuando un archivo está siendo arrastrado sobre la zona
   const [isDragging, setIsDragging] = useState(false);
 
+  /**
+   * Previene el comportamiento por defecto y activa el estado visual de arrastre.
+   */
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
+  /**
+   * Desactiva el estado visual de arrastre cuando el cursor sale del área.
+   */
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
   };
 
+  /**
+   * Maneja la acción de soltar el archivo. 
+   * Recupera el primer archivo detectado y lo envía al callback principal.
+   */
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -27,6 +52,9 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelected }) => {
     }
   };
 
+  /**
+   * Maneja la selección de archivos mediante el explorador de archivos estándar del sistema operativo.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       onFileSelected(e.target.files[0]);
@@ -35,6 +63,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelected }) => {
 
   return (
     <div className="max-w-xl mx-auto mt-12 animate-fade-in-up">
+      {/* Área interactiva principal */}
       <div 
         onClick={() => fileInputRef.current?.click()}
         onDragOver={handleDragOver}
@@ -47,6 +76,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelected }) => {
           }`}
       >
         <div className="space-y-2 text-center pointer-events-none">
+          {/* Icono animado dinámico */}
           <div className={`mx-auto h-16 w-16 transition-colors flex items-center justify-center rounded-full
             ${isDragging ? 'text-brand-600 bg-white' : 'text-slate-400 bg-slate-50 group-hover:text-brand-500 group-hover:bg-white'}
           `}>
@@ -63,6 +93,8 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelected }) => {
           </p>
         </div>
       </div>
+
+      {/* Input de tipo archivo oculto para accesibilidad y funcionalidad de clic */}
       <input 
           id="file-upload" 
           name="file-upload" 
@@ -73,6 +105,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelected }) => {
           onChange={handleChange}
       />
       
+      {/* Tarjetas informativas de características adicionales */}
       <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div className="bg-white shadow rounded-lg p-6 border border-slate-100">
               <div className="flex items-center mb-4">
@@ -83,6 +116,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFileSelected }) => {
               </div>
               <p className="text-slate-600 text-sm">Compatible con Excel (.xlsx, .xls), OpenOffice (.ods) y CSV. Detección automática de columnas.</p>
           </div>
+          
           <div className="bg-white shadow rounded-lg p-6 border border-slate-100">
               <div className="flex items-center mb-4">
                   <div className="p-2 bg-green-100 rounded-lg text-green-600 mr-3">
