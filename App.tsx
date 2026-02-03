@@ -7,24 +7,38 @@ import { UploadZone } from './components/UploadZone';
 import { ResultsTable } from './components/ResultsTable';
 import { InferentialAnalysis } from './components/InferentialAnalysis';
 
+/**
+ * Componente Raíz - Abejorro Digital.
+ * @description Actúa como el controlador principal de la aplicación. 
+ * Gestiona el ciclo de vida del Web Worker, la carga de archivos binarios,
+ * la navegación por pestañas y el flujo de estados de procesamiento.
+ * @component
+ */
 export default function App() {
+  // --- ESTADOS DE DATOS ESTADÍSTICOS ---
   const [stats, setStats] = useState<VariableStats[]>([]);
   const [rawData, setRawData] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [totalRows, setTotalRows] = useState(0);
+  
+  // --- ESTADOS DE CONTROL Y UI ---
   const [fileName, setFileName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'descriptive' | 'inferential'>('descriptive');
   
-  // Inferential State
+  // --- ESTADOS DE ANÁLISIS INFERENCIAL ---
   const [inferentialResults, setInferentialResults] = useState<InferentialResult[]>([]);
   const [inferentialLoading, setInferentialLoading] = useState(false);
   
-  // UI State
-  const [activeTab, setActiveTab] = useState<'descriptive' | 'inferential'>('descriptive');
-
+  /** * Referencia al Worker para persistencia entre renders.
+   */
   const workerRef = useRef<Worker | null>(null);
 
+  /**
+   * Inicializa el Web Worker y establece el canal de escucha de mensajes.
+   * @listens message - Escucha eventos 'SUCCESS_FILE', 'SUCCESS_INFERENTIAL' y 'ERROR'.
+   */
   useEffect(() => {
     const workerUrl = createWorker();
     workerRef.current = new Worker(workerUrl);
@@ -47,12 +61,17 @@ export default function App() {
       }
     };
 
+    // Limpieza al desmontar el componente
     return () => {
       workerRef.current?.terminate();
       URL.revokeObjectURL(workerUrl);
     };
   }, []);
 
+  /**
+   * Procesa el archivo seleccionado convirtiéndolo a cadena binaria.
+   * @param {File} file - Archivo obtenido del componente UploadZone.
+   */
   const processFile = (file: File) => {
     setLoading(true);
     setError(null);
@@ -78,6 +97,11 @@ export default function App() {
     reader.readAsBinaryString(file);
   };
 
+  /**
+   * Envía una solicitud de análisis inferencial al Worker.
+   * @param {string} var1 - Variable dependiente/principal.
+   * @param {string} var2 - Variable independiente/comparativa.
+   */
   const runInferential = (var1: string, var2: string) => {
      setInferentialLoading(true);
      if (workerRef.current) {
@@ -88,12 +112,18 @@ export default function App() {
      }
   };
 
+  /**
+   * Dispara la generación del documento PDF con los resultados actuales.
+   */
   const handleExportPDF = () => {
     if (stats.length > 0 && fileName) {
       generatePDF(stats, inferentialResults, fileName);
     }
   };
 
+  /**
+   * Reinicia la aplicación al estado de bienvenida.
+   */
   const reset = () => {
     setStats([]);
     setRawData([]);
@@ -105,7 +135,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
-      {/* Brand Header */}
+      {/* Header con identidad visual de marca */}
       <header className="bg-brand-900 border-b-4 border-brand-500 sticky top-0 z-40 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3 cursor-pointer group" onClick={reset}>
@@ -138,8 +168,7 @@ export default function App() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
-        
-        {/* Error Notification */}
+        {/* Notificaciones de Error */}
         {error && (
             <div className="mb-6 rounded-md bg-red-50 p-4 border border-red-200 animate-fade-in-up">
               <div className="flex">
@@ -159,12 +188,12 @@ export default function App() {
             </div>
         )}
 
-        {/* Initial Upload State */}
+        {/* Estado inicial: Zona de carga */}
         {stats.length === 0 && !loading && (
           <UploadZone onFileSelected={processFile} />
         )}
 
-        {/* Global Loading */}
+        {/* Pantalla de carga global */}
         {loading && (
           <div className="flex flex-col items-center justify-center h-64 mt-8 animate-pulse">
             <Loader2 className="h-12 w-12 text-brand-600 animate-spin mb-4" />
@@ -172,11 +201,11 @@ export default function App() {
           </div>
         )}
 
-        {/* Main Application Area */}
+        {/* Área principal de resultados post-carga */}
         {stats.length > 0 && !loading && (
           <div className="animate-fade-in-up">
             
-            {/* File Summary Header */}
+            {/* Resumen del archivo procesado */}
             <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
               <div>
                  <h2 className="text-lg font-bold text-slate-800">{fileName}</h2>
@@ -184,7 +213,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Tabs Navigation */}
+            {/* Navegación por Pestañas */}
             <div className="border-b border-slate-200 mb-6">
               <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                 <button
@@ -212,7 +241,7 @@ export default function App() {
               </nav>
             </div>
 
-            {/* Tab Content */}
+            {/* Contenido dinámico según pestaña activa */}
             <div className="min-h-[400px]">
               {activeTab === 'descriptive' ? (
                 <ResultsTable stats={stats} />
